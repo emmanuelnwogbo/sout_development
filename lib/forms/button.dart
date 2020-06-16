@@ -52,12 +52,12 @@ class Button extends StatelessWidget {
                           letterSpacing: 1.5,
                         )),
                 onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/dashboard');
-                  /*if (isInvalidSignUp) {
+                  //Navigator.pushReplacementNamed(context, '/dashboard');
+                  if (isInvalidSignUp) {
                     return;
                   }
 
-                  auth.triggerSubmit(true, description);*/
+                  auth.triggerSubmit(true, description);
                 },
                 color: isInvalidSignUp
                     ? Color(0xFF3edd9c).withOpacity(.6)

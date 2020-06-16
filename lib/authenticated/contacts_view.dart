@@ -10,10 +10,10 @@ class _ContactsViewState extends State<ContactsView> {
   final String fontFamily = 'HelveticaNeue';
 
   Iterable<Contact> _contacts;
+  List<String> addedNums = [];
+  List<int> addedNumsIndex = [];
 
   Future<void> _getContacts() async {
-    //Make sure we already have permissions for contacts when we get to this
-    //page, so we can just retrieve it
     final Iterable<Contact> contacts =
         (await ContactsService.getContacts()).toList();
     setState(() {
@@ -43,27 +43,93 @@ class _ContactsViewState extends State<ContactsView> {
                   Contact contact = _contacts?.elementAt(index);
                   var numbers = contact.phones.toList();
 
-                  return Container(
-                      height: 65,
-                      child: Card(
-                          child: Padding(
-                        padding: EdgeInsets.only(left: 10, right: 10),
-                        child: Center(
-                          child: Row(children: <Widget>[
-                            Container(
-                                child: CircleAvatar(
-                              backgroundImage: MemoryImage(contact.avatar),
-                            )),
-                            SizedBox(
-                              width: 10,
+                  return GestureDetector(
+                      onTap: () {
+                        if (addedNumsIndex.contains(index)) {
+                          List<int> addedNumsIndexArr = addedNumsIndex;
+                          List<String> addedNumsArr = addedNums;
+
+                          for (var i = 0; i < numbers.length; i++) {
+                            var value = numbers.elementAt(i).value;
+                            debugPrint(value);
+                            addedNumsArr.remove(value);
+                          }
+
+                          addedNumsIndexArr.remove(index);
+
+                          setState(() {
+                            addedNumsIndex = addedNumsIndexArr;
+                            addedNums = addedNumsArr;
+                          });
+                        } else {
+                          List<int> addedNumsIndexArr = addedNumsIndex;
+                          List<String> addedNumsArr = addedNums;
+
+                          for (var i = 0; i < numbers.length; i++) {
+                            var value = numbers.elementAt(i).value;
+                            debugPrint(value);
+                            addedNumsArr.add(value);
+                          }
+
+                          addedNumsIndexArr.add(index);
+                          setState(() {
+                            addedNumsIndex = addedNumsIndexArr;
+                            addedNums = addedNumsArr;
+                          });
+                        }
+                      },
+                      child: Container(
+                          height: 65,
+                          decoration: addedNumsIndex.contains(index)
+                              ? new BoxDecoration(
+                                  boxShadow: [
+                                    new BoxShadow(
+                                      spreadRadius: .1,
+                                      color: Color(0xFF3edd9c).withOpacity(.3),
+                                      blurRadius: .3,
+                                    ),
+                                  ],
+                                )
+                              : new BoxDecoration(),
+                          child: Card(
+                              child: Padding(
+                            padding: EdgeInsets.only(left: 10, right: 10),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Row(children: <Widget>[
+                                    Container(
+                                        child: CircleAvatar(
+                                      backgroundImage:
+                                          MemoryImage(contact.avatar),
+                                    )),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text(contact.displayName,
+                                        textAlign: TextAlign.start,
+                                        style: TextStyle(
+                                          fontSize: 13.0 * curScaleFactor,
+                                          fontFamily: fontFamily,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 1.5,
+                                        ))
+                                  ]),
+                                  addedNumsIndex.contains(index)
+                                      ? Container(
+                                          child: Icon(
+                                            Icons.check,
+                                            color: Color(0xFF3edd9c),
+                                            size: 22.0,
+                                          ),
+                                        )
+                                      : Container()
+                                ],
+                              ),
                             ),
-                            Text(
-                              contact.displayName,
-                              textAlign: TextAlign.start,
-                            )
-                          ]),
-                        ),
-                      )));
+                          ))));
                 })
             : Center(
                 child: const CircularProgressIndicator(
