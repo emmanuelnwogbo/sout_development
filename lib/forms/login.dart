@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:sout_development/forms/input.dart';
 import 'package:sout_development/forms/button.dart';
+import 'package:sout_development/forms/google_button.dart';
 
 import 'package:provider/provider.dart';
 import 'package:sout_development/providers/auth.dart';
@@ -12,8 +13,9 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  final String fontFamily = 'HelveticaNeue';
   final List<Input> loginfields = [
-    Input(placeholder: 'User ID', type: 'email', label: 'Email'),
+    Input(placeholder: 'Email', type: 'email', label: 'Email'),
     Input(placeholder: 'Password', type: 'password', label: 'Password')
   ];
 
@@ -47,7 +49,19 @@ class _LoginState extends State<Login> {
                           SizedBox(height: 15),
                           Center(
                             child: Button(description: 'LOGIN'),
-                          )
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 10, bottom: 10),
+                            child: Center(
+                                child: Text('or',
+                                    style: TextStyle(
+                                        fontSize: 20.0 * curScaleFactor,
+                                        fontFamily: fontFamily,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.5,
+                                        color: Colors.black38))),
+                          ),
+                          Center(child: Googlebtn()),
                         ],
                       ),
                     ))),

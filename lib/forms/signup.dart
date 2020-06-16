@@ -16,6 +16,7 @@ class _SignUpState extends State<SignUp> {
   final String fontFamily = 'HelveticaNeue';
 
   final List<Input> signupfields = [
+    Input(placeholder: 'Full Name', type: 'text', label: 'Full Name'),
     Input(placeholder: 'Email', type: 'email', label: 'Email'),
     Input(placeholder: 'Password', type: 'password', label: 'Password'),
     Input(
@@ -80,7 +81,17 @@ class _SignUpState extends State<SignUp> {
                         Center(
                           child: Button(description: 'SIGN UP'),
                         ),
-                        Center(child: Text('or')),
+                        Padding(
+                          padding: EdgeInsets.only(top: 10, bottom: 10),
+                          child: Center(
+                              child: Text('or',
+                                  style: TextStyle(
+                                      fontSize: 20.0 * curScaleFactor,
+                                      fontFamily: fontFamily,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.5,
+                                      color: Colors.black38))),
+                        ),
                         Center(child: Googlebtn()),
                         SizedBox(
                           height: 20,

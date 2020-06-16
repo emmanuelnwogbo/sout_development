@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sout_development/providers/auth.dart';
 
+import 'package:sout_development/geolocator.dart';
+
 class Header extends StatefulWidget {
   Header(this.nameVisible);
   final bool nameVisible;
@@ -19,6 +21,8 @@ class _HeaderState extends State<Header> {
 
     final auth = Provider.of<Auth>(context);
 
+    final userName = auth.name == null ? '' : auth.name;
+
     return Container(
         height: MediaQuery.of(context).size.height / 12,
         child: Row(
@@ -30,7 +34,7 @@ class _HeaderState extends State<Header> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 widget.nameVisible
-                    ? Text('Emma',
+                    ? Text(userName == null ? '' : userName,
                         textAlign: TextAlign.start,
                         style: TextStyle(
                             letterSpacing: .8,
@@ -137,7 +141,11 @@ class _HeaderState extends State<Header> {
                                         )))
                               ],
                             )),
-                      ))
+                      )),
+                  locationOn
+                      ? GeolocatorView(
+                          realTimeLocation: true, sosLocationSms: false)
+                      : Container()
                 ],
               ),
             )

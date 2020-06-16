@@ -1,30 +1,51 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+//import 'package:firebase_database/firebase_database.dart';
+//import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:email_validator/email_validator.dart';
 
 class User {
-  User({@required this.uid});
+  User(
+      {@required this.uid,
+      @required this.email,
+      @required this.fullname,
+      this.lat,
+      this.long,
+      @required this.isEmailVerified});
+
   final String uid;
+  final String email;
+  final String fullname;
+  final double lat;
+  final double long;
+  final bool isEmailVerified;
 }
 
 class Auth with ChangeNotifier {
   final _firebaseAuth = FirebaseAuth.instance;
 
-  User _userFromFirebase(FirebaseUser user) {
+  FirebaseUser _userFromFirebase(FirebaseUser user) {
     if (user == null) {
       return null;
     }
 
-    print(user);
+    print(user.email);
+
     _validating = false;
     _authUser = user;
     _isLoggedIn = true;
-    
+    _isAuthenticated = true;
     notifyListeners();
 
-    return User(uid: user.uid);
+    if (_type != 'LOGIN') {
+      addUser(user.uid, _name, user.email);
+      notifyListeners();
+    }
+
+    return user;
   }
 
   String _name;
@@ -38,9 +59,10 @@ class Auth with ChangeNotifier {
   FirebaseUser _authUser;
   bool _isLoggedIn = false;
   bool _initGoogleSignIn = false;
+  bool _isAuthenticated = false;
 
   String get name {
-    return _name;
+    return _name = '';
   }
 
   String get email {
@@ -83,10 +105,26 @@ class Auth with ChangeNotifier {
     return _initGoogleSignIn;
   }
 
-  Future<User> createUserWithEmailAndPassword(email, password) async {
+  bool get isAuthenticated {
+    return _isAuthenticated;
+  }
+
+  Future<FirebaseUser> createUserWithEmailAndPassword(email, password) async {
     final authResult = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     return _userFromFirebase(authResult.user);
+  }
+
+  Future<FirebaseUser> signInWithEmailAndPassword(email, password) async {
+    final authResult = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email, password: password);
+    return _userFromFirebase(authResult.user);
+  }
+
+  Future addUser(String id, String fullname, String email) async {
+    Firestore.instance
+        .collection('users')
+        .add({'email': email, 'fullname': fullname, 'id': id});
   }
 
   void addName(name) {
@@ -128,6 +166,10 @@ class Auth with ChangeNotifier {
 
     if (type == 'SIGN UP') {
       createUserWithEmailAndPassword(_email, _password);
+    }
+
+    if (type == 'LOGIN') {
+      signInWithEmailAndPassword(_email, _password);
     }
   }
 }

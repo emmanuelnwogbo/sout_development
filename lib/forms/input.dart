@@ -80,6 +80,10 @@ class _InputState extends State<Input> {
                               setState(() {
                                 _value = value;
 
+                                if (widget.placeholder == 'Full Name') {
+                                  auth.addName(value);
+                                }
+
                                 if (widget.placeholder == 'Email') {
                                   auth.addEmail(value);
                                 }
@@ -101,9 +105,14 @@ class _InputState extends State<Input> {
                                   left: 14, bottom: 0, top: 11, right: 15),
                             ),
                             //controller: _amountController,
-                            keyboardType: TextInputType.text,
+                            keyboardType: widget.placeholder == 'Password' ||
+                                    widget.placeholder == 'Confirm Password'
+                                ? TextInputType.text : TextInputType.emailAddress,
+                            obscureText: widget.placeholder == 'Password' ||
+                                    widget.placeholder == 'Confirm Password'
+                                ? true
+                                : false,
                             //onSubmitted: (_) => _submitData(),
-                            // onChanged: (val) => amountInput = val,
                           ))))
                 ],
               )),

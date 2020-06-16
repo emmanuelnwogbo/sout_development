@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sout_development/data/onboarding_images.dart';
 
-import 'package:sout_development/forms/signup.dart';
-import 'package:sout_development/forms/login.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 final String fontFamily = 'HelveticaNeue';
 
@@ -17,6 +16,31 @@ class _OnboardingState extends State<Onboarding> {
 
   PageController controller =
       PageController(initialPage: 0, viewportFraction: 1);
+
+  Future<PermissionStatus> _requestPermission() async {
+    final PermissionStatus permission = await Permission.location.status;
+    if (permission != PermissionStatus.granted &&
+        permission != PermissionStatus.denied) {
+      final Map<Permission, PermissionStatus> permissionStatus =
+          await [Permission.location].request();
+      return permissionStatus[Permission.location] ??
+          PermissionStatus.undetermined;
+    } else {
+      return permission;
+    }
+  }
+
+  Future<PermissionStatus> _getPermissionData() async {
+    final PermissionStatus permissionStatus = await _requestPermission();
+    print(permissionStatus);
+    return permissionStatus;
+  }
+
+  @override
+  void initState() {
+    _getPermissionData();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,10 +138,7 @@ class _OnboardingState extends State<Onboarding> {
                                   fontSize: 18,
                                 )),
                             onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  new MaterialPageRoute(
-                                      builder: (context) => new Login()));
+                              Navigator.pushNamed(context, '/login');
                             },
                             color: Color(0xFF3edd9c),
                             textColor: Colors.white,
@@ -134,12 +155,7 @@ class _OnboardingState extends State<Onboarding> {
                           height: 55,
                           child: FlatButton(
                             onPressed: () {
-                              print('hello there');
-                              //Navigator.pushNamed(context, '/signup');
-                              Navigator.push(
-                                  context,
-                                  new MaterialPageRoute(
-                                      builder: (context) => new SignUp()));
+                              Navigator.pushNamed(context, '/signup');
                             },
                             color: Color(0xFF3edd9c),
                             textColor: Colors.white,
