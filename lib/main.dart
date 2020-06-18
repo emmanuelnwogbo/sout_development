@@ -98,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
       idToken: googleSignInAuthentication.idToken,
     );
 
-    print(credential);
+    //print(credential);
   }
 
   void signOutGoogle() async {}

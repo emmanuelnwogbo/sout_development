@@ -18,7 +18,7 @@ class _ContactsViewState extends State<ContactsView> {
         (await ContactsService.getContacts()).toList();
     setState(() {
       _contacts = contacts;
-      print(_contacts);
+     // print(_contacts);
     });
   }
 
@@ -51,7 +51,7 @@ class _ContactsViewState extends State<ContactsView> {
 
                           for (var i = 0; i < numbers.length; i++) {
                             var value = numbers.elementAt(i).value;
-                            debugPrint(value);
+                            //debugPrint(value);
                             addedNumsArr.remove(value);
                           }
 
@@ -67,7 +67,7 @@ class _ContactsViewState extends State<ContactsView> {
 
                           for (var i = 0; i < numbers.length; i++) {
                             var value = numbers.elementAt(i).value;
-                            debugPrint(value);
+                            //debugPrint(value);
                             addedNumsArr.add(value);
                           }
 

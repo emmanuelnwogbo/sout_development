@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sout_development/providers/auth.dart';
 
-import 'package:sout_development/geolocator.dart';
+import 'package:geolocator/geolocator.dart';
 
 class Header extends StatefulWidget {
   Header(this.nameVisible);
@@ -13,7 +14,33 @@ class Header extends StatefulWidget {
 }
 
 class _HeaderState extends State<Header> {
-  bool locationOn = false;
+  bool locationTracking = false;
+  final geolocator = Geolocator();
+  final locationOptions =
+      LocationOptions(accuracy: LocationAccuracy.high, distanceFilter: 10);
+  StreamSubscription<Position> positionStream;
+
+  Future _trackLocation() async {
+    if (!locationTracking) {
+      setState(() {
+        locationTracking = true;
+
+        positionStream = geolocator
+            .getPositionStream(locationOptions)
+            .listen((Position position) {
+          print(position == null
+              ? 'Unknown'
+              : position.latitude.toString() +
+                  ', ' +
+                  position.longitude.toString() +
+                  'see this location');
+        });
+      });
+    } else {
+      locationTracking = false;
+      positionStream?.cancel();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,11 +105,7 @@ class _HeaderState extends State<Header> {
                         color: Colors.white,
                         child: FlatButton(
                             onPressed: () {
-                              setState(() {
-                                locationOn
-                                    ? locationOn = false
-                                    : locationOn = true;
-                              });
+                              _trackLocation();
                             },
                             padding: EdgeInsets.all(0.0),
                             child: Stack(
@@ -99,12 +122,12 @@ class _HeaderState extends State<Header> {
                                           CrossAxisAlignment.center,
                                       children: <Widget>[
                                         AnimatedOpacity(
-                                            opacity: locationOn ? 1 : 0,
+                                            opacity: locationTracking ? 1 : 0,
                                             duration:
                                                 Duration(milliseconds: 500),
                                             child: Text('ON')),
                                         AnimatedOpacity(
-                                            opacity: locationOn ? 0 : 1,
+                                            opacity: locationTracking ? 0 : 1,
                                             duration:
                                                 Duration(milliseconds: 500),
                                             child: Text('OFF'))
@@ -114,7 +137,7 @@ class _HeaderState extends State<Header> {
                                     duration: const Duration(milliseconds: 500),
                                     curve: Curves.ease,
                                     top: 1.0,
-                                    right: locationOn ? 1.0 : 40.0,
+                                    right: locationTracking ? 1.0 : 40.0,
                                     bottom: 1.0,
                                     child: ClipRRect(
                                         borderRadius:
@@ -128,12 +151,12 @@ class _HeaderState extends State<Header> {
                                             ),
                                             onPressed: () {
                                               setState(() {
-                                                locationOn
-                                                    ? locationOn = false
-                                                    : locationOn = true;
+                                                locationTracking
+                                                    ? locationTracking = false
+                                                    : locationTracking = true;
                                               });
                                             },
-                                            color: locationOn
+                                            color: locationTracking
                                                 ? Color(0xFF3edd9c)
                                                 : Colors.red.withOpacity(.9),
                                             padding: EdgeInsets.all(8.0),
@@ -142,10 +165,6 @@ class _HeaderState extends State<Header> {
                               ],
                             )),
                       )),
-                  locationOn
-                      ? GeolocatorView(
-                          realTimeLocation: true, sosLocationSms: false)
-                      : Container()
                 ],
               ),
             )

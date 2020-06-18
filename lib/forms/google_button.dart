@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class Googlebtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
     final GoogleSignIn googleSignIn = GoogleSignIn();
 
     Future<void> signInWithGoogle() async {
@@ -21,7 +22,18 @@ class Googlebtn extends StatelessWidget {
         idToken: googleSignInAuthentication.idToken,
       );
 
-      print(credential);
+      final AuthResult authResult =
+          await _auth.signInWithCredential(credential);
+      final FirebaseUser user = authResult.user;
+      final userToken = await user.getIdToken();
+
+      if (user.email != null) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      });
+    }
+
+      print(user.email);
     }
 
     final curScaleFactor = MediaQuery.of(context).textScaleFactor;
@@ -50,20 +62,21 @@ class Googlebtn extends StatelessWidget {
                       height: 17,
                       width: 14,
                       child: Image(
-                        image: AssetImage("assets/google_logo.png"),
-                        fit: BoxFit.scaleDown
-                      ),
+                          image: AssetImage("assets/google_logo.png"),
+                          fit: BoxFit.scaleDown),
                     ),
-                    SizedBox(width: 7.0,),
+                    SizedBox(
+                      width: 7.0,
+                    ),
                     Text(
-                        'Sign in with Google',
-                        style: TextStyle(
-                            fontSize: 12.0 * curScaleFactor,
-                            fontFamily: fontFamily,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                            color: Colors.grey),
-                      )
+                      'Sign in with Google',
+                      style: TextStyle(
+                          fontSize: 12.0 * curScaleFactor,
+                          fontFamily: fontFamily,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                          color: Colors.grey),
+                    )
                   ],
                 ))));
   }

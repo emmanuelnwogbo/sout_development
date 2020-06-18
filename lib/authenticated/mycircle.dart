@@ -78,7 +78,7 @@ class _MyCircleState extends State<MyCircle> {
 
   Future<PermissionStatus> _getPermissionData() async {
     final PermissionStatus permissionStatus = await _getPermission();
-    print(permissionStatus);
+    //print(permissionStatus);
     return permissionStatus;
   }
 

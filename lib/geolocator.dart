@@ -42,16 +42,16 @@ class _GeolocatorViewState extends State<GeolocatorView> {
 
     final bool realTimeLOcation = widget.realTimeLocation;
     final bool sosLocationSms = widget.sosLocationSms;
-    debugPrint('$realTimeLOcation, $sosLocationSms');
+    //debugPrint('$realTimeLOcation, $sosLocationSms');
 
-    print(realTimeLOcation);
-    print(sosLocationSms);
+    //print(realTimeLOcation);
+    //print(sosLocationSms);
 
     if (sosLocationSms) {
       _sendSMS(circle, _position);
     }
 
-    print(position);
+    //print(position);
   }
   /*
   Future _gpsService() async {

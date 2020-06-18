@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:io';
 
 import 'package:sout_development/authenticated/header.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +9,7 @@ import 'package:sout_development/geolocator.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:share/share.dart';
 import 'package:flutter_sms/flutter_sms.dart';
+import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 
 class Dashboard extends StatefulWidget {
   @override
@@ -19,48 +18,93 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   bool sos = false;
+  List<String> _recepients = ['08157472838', '08121144100'];
+  String _message;
+  String _position;
+  bool _allowshareLocation = false;
+  bool _allowTextSos = false;
+
+  Future<void> _createDynamicLink(bool short, Position position) async {
+    final DynamicLinkParameters parameters = DynamicLinkParameters(
+      uriPrefix: 'https://sout.page.link',
+      link: Uri.parse('https://www.google.com/maps/place/4%C2%B049' +
+          "'27.0%22N+7%C2%B002'" +
+          '01.0%22E/@4.824167,7.033611,17z/data=!3m1!4b1!4m5!3m4!1s0x0:0x0!8m2!3d4.824167!4d7.033611'),
+      androidParameters: AndroidParameters(
+        packageName: 'io.flutter.plugins.firebasedynamiclinksexample',
+        minimumVersion: 0,
+      ),
+      dynamicLinkParametersOptions: DynamicLinkParametersOptions(
+        shortDynamicLinkPathLength: ShortDynamicLinkPathLength.short,
+      ),
+      iosParameters: IosParameters(
+        bundleId: 'com.google.FirebaseCppDynamicLinksTestApp.dev',
+        minimumVersion: '0',
+      ),
+    );
+
+    Uri _url;
+    final ShortDynamicLink shortLink = await parameters.buildShortLink();
+    _url = shortLink.shortUrl;
+
+    print(_url);
+
+    if (_allowshareLocation) {
+      _shareLocation(
+          'Treat as urgent! If you are getting this I need your help. See my location here: ' +
+              _url.toString());
+    }
+
+    if (_allowTextSos) {
+      _sendSMS(
+          _recepients,
+          'Treat as urgent! If you are getting this I need your help. See my location here: ' +
+              _url.toString());
+    }
+  }
+
+  Future _shareLocation(message) async {
+    final RenderBox box = context.findRenderObject();
+    Share.share(message,
+        subject: 'this is my location,',
+        sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
+  }
+
+  void _sendSMS(List<String> recipents, String body) async {
+    try {
+      String _result = await sendSMS(message: body, recipients: recipents);
+      setState(() => _message = _result);
+    } catch (error) {
+      setState(() => _message = error.toString());
+    }
+  }
+
+  Future _getLocation() async {
+    Position position = await Geolocator()
+        .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+    _createDynamicLink(true, position);
+
+    print('Treat as urgent! If you are getting this I need your help. See my location here: ' +
+        'https://www.google.com/search?sxsrf=ALeKk00e3rmzKArYJooH5Etiq4loMGg_9A%3A1592422988128&source=hp&ei=THLqXsaOBYmmUND-jYAC&q=' +
+        position.latitude.toString() +
+        '%2C' +
+        position.longitude.toString() +
+        '&oq=6.5406337%2C+3.3222309&gs_lcp=CgZwc3ktYWIQA1CWCliWCmCoD2gAcAB4AIABlgKIAZYCkgEDMi0xmAEAoAECoAEBqgEHZ3dzLXdpeg&sclient=psy-ab&ved=0ahUKEwjG5KX0zYnqAhUJExQKHVB_AyAQ4dUDCAc&uact=5');
+
+    setState(() {
+      _position = 'Treat as urgent! If you are getting this I need your help. See my location here: ' +
+          'https://www.google.com/search?sxsrf=ALeKk00e3rmzKArYJooH5Etiq4loMGg_9A%3A1592422988128&source=hp&ei=THLqXsaOBYmmUND-jYAC&q=' +
+          position.latitude.toString() +
+          '%2C' +
+          position.longitude.toString() +
+          '&oq=6.5406337%2C+3.3222309&gs_lcp=CgZwc3ktYWIQA1CWCliWCmCoD2gAcAB4AIABlgKIAZYCkgEDMi0xmAEAoAECoAEBqgEHZ3dzLXdpeg&sclient=psy-ab&ved=0ahUKEwjG5KX0zYnqAhUJExQKHVB_AyAQ4dUDCAc&uact=5';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final curScaleFactor = MediaQuery.of(context).textScaleFactor;
-    List<String> _recepients = ['08033426880', '08157472838', '08121144100'];
-    String _message;
-    String _position;
-    bool _allowshareLocation = false;
-    bool _allowTextSos = false;
-
-    Future _shareLocation() async {
-      final RenderBox box = context.findRenderObject();
-      Share.share('$_position',
-          subject: 'this is my location,',
-          sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
-    }
-
-    void _sendSMS(List<String> recipents, String body) async {
-      try {
-        String _result = await sendSMS(message: body, recipients: recipents);
-        setState(() => _message = _result);
-      } catch (error) {
-        setState(() => _message = error.toString());
-      }
-    }
-
-    Future _getLocation() async {
-      Position position = await Geolocator()
-          .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-
-      setState(() {
-        _position = '$position';
-      });
-
-      if (_allowshareLocation) {
-        _shareLocation();
-      }
-
-      if (_allowTextSos) {
-        _sendSMS(_recepients, _position);
-      }
-    }
 
     return Material(
       child: SingleChildScrollView(

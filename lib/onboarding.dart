@@ -32,7 +32,7 @@ class _OnboardingState extends State<Onboarding> {
 
   Future<PermissionStatus> _getPermissionData() async {
     final PermissionStatus permissionStatus = await _requestPermission();
-    print(permissionStatus);
+    //print(permissionStatus);
     return permissionStatus;
   }
 

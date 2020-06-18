@@ -32,7 +32,7 @@ class Auth with ChangeNotifier {
       return null;
     }
 
-    print(user.email);
+    //print(user.email);
 
     _validating = false;
     _authUser = user;
