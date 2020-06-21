@@ -9,12 +9,7 @@ class Person {
   final String photo;
 }
 
-List<Person> circle = [
-  Person('Emmanuel Nwogbo',
-      'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'),
-  Person('Jack Bauer',
-      'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'),
-];
+List<Person> circle = [];
 
 class MyCircle extends StatefulWidget {
   @override
@@ -202,9 +197,9 @@ class _MyCircleState extends State<MyCircle> {
                                                             fontSize: 20,
                                                           )),
                                                       onPressed: () {
-                                                        setState(() {
-                                                          popUpOpen = true;
-                                                        });
+                                                        Navigator.pushNamed(
+                                                            context,
+                                                            '/contacts');
                                                       },
                                                       color: Color(0xFF3edd9c),
                                                       textColor: Colors.white,

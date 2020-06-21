@@ -3,6 +3,9 @@ import 'package:contacts_service/contacts_service.dart';
 import 'package:sout_development/providers/contacts.dart';
 import 'package:provider/provider.dart';
 
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart' as syspaths;
+
 class ContactsView extends StatefulWidget {
   @override
   _ContactsViewState createState() => _ContactsViewState();
@@ -20,8 +23,9 @@ class _ContactsViewState extends State<ContactsView> {
         (await ContactsService.getContacts()).toList();
     setState(() {
       _contacts = contacts;
-      // print(_contacts);
     });
+
+    //final appDir = await syspaths.getApplicationDocumentsDirectory();
   }
 
   @override

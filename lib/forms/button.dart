@@ -36,8 +36,9 @@ class Button extends StatelessWidget {
         signinform.passwordValue.length >= 6;
 
     if (auth.isAuthenticated) {
-      print('just got logged in now');
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      Future.delayed(const Duration(milliseconds: 100), () {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      });
     }
 
     return description == 'SIGN UP'
