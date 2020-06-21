@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:contacts_service/contacts_service.dart';
+import 'package:sout_development/providers/contacts.dart';
+import 'package:provider/provider.dart';
 
 class ContactsView extends StatefulWidget {
   @override
@@ -10,7 +12,7 @@ class _ContactsViewState extends State<ContactsView> {
   final String fontFamily = 'HelveticaNeue';
 
   Iterable<Contact> _contacts;
-  List<String> addedNums = [];
+  List<String> addedNums = ['08033426880'];
   List<int> addedNumsIndex = [];
 
   Future<void> _getContacts() async {
@@ -18,7 +20,7 @@ class _ContactsViewState extends State<ContactsView> {
         (await ContactsService.getContacts()).toList();
     setState(() {
       _contacts = contacts;
-     // print(_contacts);
+      // print(_contacts);
     });
   }
 
@@ -31,6 +33,7 @@ class _ContactsViewState extends State<ContactsView> {
   @override
   Widget build(BuildContext context) {
     final curScaleFactor = MediaQuery.of(context).textScaleFactor;
+    final contactProv = Provider.of<ContactsProvider>(context);
 
     return Container(
         //height: MediaQuery.of(context).size.height,
@@ -42,41 +45,29 @@ class _ContactsViewState extends State<ContactsView> {
                 itemBuilder: (BuildContext context, int index) {
                   Contact contact = _contacts?.elementAt(index);
                   var numbers = contact.phones.toList();
+                  var addedNumsArr = addedNums;
+
+                  numbers.forEach((number) {
+                    if (contactProv.phonenums.contains(number)) {
+                      addedNumsArr.add(number.toString());
+
+                      setState(() {
+                        addedNums = addedNumsArr;
+                      });
+                    }
+                  });
 
                   return GestureDetector(
                       onTap: () {
-                        if (addedNumsIndex.contains(index)) {
-                          List<int> addedNumsIndexArr = addedNumsIndex;
-                          List<String> addedNumsArr = addedNums;
-
-                          for (var i = 0; i < numbers.length; i++) {
-                            var value = numbers.elementAt(i).value;
-                            //debugPrint(value);
-                            addedNumsArr.remove(value);
-                          }
-
-                          addedNumsIndexArr.remove(index);
-
-                          setState(() {
-                            addedNumsIndex = addedNumsIndexArr;
-                            addedNums = addedNumsArr;
-                          });
-                        } else {
-                          List<int> addedNumsIndexArr = addedNumsIndex;
-                          List<String> addedNumsArr = addedNums;
-
-                          for (var i = 0; i < numbers.length; i++) {
-                            var value = numbers.elementAt(i).value;
-                            //debugPrint(value);
-                            addedNumsArr.add(value);
-                          }
-
-                          addedNumsIndexArr.add(index);
-                          setState(() {
-                            addedNumsIndex = addedNumsIndexArr;
-                            addedNums = addedNumsArr;
-                          });
+                        print(contact);
+                        var numbersArr = [];
+                        for (var i = 0; i < numbers.length; i++) {
+                          var value = numbers.elementAt(i).value;
+                          debugPrint(value.toString());
+                          numbersArr.add(value);
                         }
+                        contactProv.setContacts(
+                            contact.displayName, contact.avatar, numbersArr);
                       },
                       child: Container(
                           height: 65,
@@ -117,7 +108,7 @@ class _ContactsViewState extends State<ContactsView> {
                                           letterSpacing: 1.5,
                                         ))
                                   ]),
-                                  addedNumsIndex.contains(index)
+                                  addedNums.contains(numbers[0])
                                       ? Container(
                                           child: Icon(
                                             Icons.check,

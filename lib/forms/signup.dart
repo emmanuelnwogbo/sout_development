@@ -16,13 +16,26 @@ class _SignUpState extends State<SignUp> {
   final String fontFamily = 'HelveticaNeue';
 
   final List<Input> signupfields = [
-    Input(placeholder: 'Full Name', type: 'text', label: 'Full Name'),
-    Input(placeholder: 'Email', type: 'email', label: 'Email'),
-    Input(placeholder: 'Password', type: 'password', label: 'Password'),
+    Input(
+        placeholder: 'Full Name',
+        type: 'text',
+        label: 'Full Name',
+        authType: 'signup'),
+    Input(
+        placeholder: 'Email',
+        type: 'email',
+        label: 'Email',
+        authType: 'signup'),
+    Input(
+        placeholder: 'Password',
+        type: 'password',
+        label: 'Password',
+        authType: 'signup'),
     Input(
         placeholder: 'Confirm Password',
         type: 'password',
-        label: 'Confirm Password'),
+        label: 'Confirm Password',
+        authType: 'signup'),
   ];
 
   List values = [];
@@ -31,13 +44,17 @@ class _SignUpState extends State<SignUp> {
     return new Column(children: signupfields.map((item) => item).toList());
   }
 
+  Future<bool> _onBackPressed() {
+    Navigator.pushReplacementNamed(context, '/onboarding');
+  }
+
   @override
   Widget build(BuildContext context) {
     final curScaleFactor = MediaQuery.of(context).textScaleFactor;
 
-    return ChangeNotifierProvider(
-        create: (context) => Auth(),
-        child: Scaffold(
+    return WillPopScope(
+        onWillPop: _onBackPressed,
+        child: new Scaffold(
             body: Material(
                 child: SingleChildScrollView(
           child: Container(
@@ -92,7 +109,7 @@ class _SignUpState extends State<SignUp> {
                                       letterSpacing: 1.5,
                                       color: Colors.black38))),
                         ),
-                        Center(child: Googlebtn()),
+                        Center(child: Googlebtn('signup')),
                         SizedBox(
                           height: 20,
                         ),

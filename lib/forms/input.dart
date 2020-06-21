@@ -3,15 +3,21 @@ import 'package:flutter/foundation.dart';
 
 import 'package:provider/provider.dart';
 import 'package:sout_development/providers/auth.dart';
+import 'package:sout_development/providers/signup.dart';
+import 'package:sout_development/providers/signin.dart';
 
 class Input extends StatefulWidget {
   Input(
-      {@required this.placeholder, @required this.type, @required this.label});
+      {@required this.placeholder,
+      @required this.type,
+      @required this.label,
+      @required this.authType});
 
   final String placeholder;
   final String type;
   final String label;
   final String email = 'email';
+  final String authType;
 
   @override
   _InputState createState() => _InputState();
@@ -30,6 +36,8 @@ class _InputState extends State<Input> {
     final curScaleFactor = MediaQuery.of(context).textScaleFactor;
 
     final auth = Provider.of<Auth>(context);
+    final signupform = Provider.of<SignUpForm>(context);
+    final signinform = Provider.of<SignInForm>(context);
 
     return Center(
       child: Column(
@@ -79,23 +87,32 @@ class _InputState extends State<Input> {
                             onChanged: (value) {
                               setState(() {
                                 _value = value;
+                              });
 
-                                if (widget.placeholder == 'Full Name') {
-                                  auth.addName(value);
+                              if (widget.authType == 'signup') {
+                                if (widget.placeholder == 'Email') {
+                                  signupform.setEmail(_value);
                                 }
 
-                                if (widget.placeholder == 'Email') {
-                                  auth.addEmail(value);
+                                if (widget.placeholder == 'Full Name') {
+                                  signupform.setFullname(_value);
                                 }
 
                                 if (widget.placeholder == 'Password') {
-                                  auth.addPassword(value);
+                                  signupform.setPassword(_value);
                                 }
 
                                 if (widget.placeholder == 'Confirm Password') {
-                                  auth.addConfirmpassword(value);
+                                  signupform.setConfirmPassword(_value);
                                 }
-                              });
+                              }
+
+                              if (widget.authType == 'login') {
+                                print('hello from login' + _value.toString());
+                                widget.placeholder == 'Email'
+                                    ? signinform.setEmail(_value)
+                                    : signinform.setPassword(_value);
+                              }
                             },
                             controller: _inputControl,
                             focusNode: _focus,
@@ -107,7 +124,8 @@ class _InputState extends State<Input> {
                             //controller: _amountController,
                             keyboardType: widget.placeholder == 'Password' ||
                                     widget.placeholder == 'Confirm Password'
-                                ? TextInputType.text : TextInputType.emailAddress,
+                                ? TextInputType.text
+                                : TextInputType.emailAddress,
                             obscureText: widget.placeholder == 'Password' ||
                                     widget.placeholder == 'Confirm Password'
                                 ? true

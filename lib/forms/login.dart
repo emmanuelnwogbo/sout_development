@@ -15,22 +15,34 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final String fontFamily = 'HelveticaNeue';
   final List<Input> loginfields = [
-    Input(placeholder: 'Email', type: 'email', label: 'Email'),
-    Input(placeholder: 'Password', type: 'password', label: 'Password')
+    Input(
+        placeholder: 'Email',
+        type: 'email',
+        label: 'Email',
+        authType: 'login'),
+    Input(
+        placeholder: 'Password',
+        type: 'password',
+        label: 'Password',
+        authType: 'login')
   ];
 
   Widget returnFields() {
     return new Column(children: loginfields.map((item) => item).toList());
   }
 
+  Future<bool> _onBackPressed() {
+    Navigator.pushReplacementNamed(context, '/onboarding');
+  }
+
   @override
   Widget build(BuildContext context) {
     final curScaleFactor = MediaQuery.of(context).textScaleFactor;
 
-    return Material(
-        child: SingleChildScrollView(
-      child: ChangeNotifierProvider(
-          create: (context) => Auth(),
+    return WillPopScope(
+        onWillPop: _onBackPressed,
+        child: new Material(
+            child: SingleChildScrollView(
           child: Center(
             child: Container(
                 height: MediaQuery.of(context).size.height,
@@ -61,11 +73,11 @@ class _LoginState extends State<Login> {
                                         letterSpacing: 1.5,
                                         color: Colors.black38))),
                           ),
-                          Center(child: Googlebtn()),
+                          Center(child: Googlebtn('login')),
                         ],
                       ),
                     ))),
-          )),
-    ));
+          ),
+        )));
   }
 }

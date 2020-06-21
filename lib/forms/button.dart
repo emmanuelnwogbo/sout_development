@@ -3,10 +3,11 @@ import 'package:flutter/foundation.dart';
 
 import 'package:provider/provider.dart';
 import 'package:sout_development/providers/auth.dart';
+import 'package:sout_development/providers/signup.dart';
+import 'package:sout_development/providers/signin.dart';
+import 'package:string_validator/string_validator.dart';
 
 import 'package:sout_development/authenticated/dashboard.dart';
-
-import 'package:sout_development/main.dart';
 
 class Button extends StatelessWidget {
   Button({@required this.description});
@@ -18,21 +19,25 @@ class Button extends StatelessWidget {
   Widget build(BuildContext context) {
     final curScaleFactor = MediaQuery.of(context).textScaleFactor;
     final auth = Provider.of<Auth>(context);
+    final signupform = Provider.of<SignUpForm>(context);
+    final signinform = Provider.of<SignInForm>(context);
 
-    bool isInvalidSignUp = !auth.emailIsValid ||
-        auth.name == null ||
-        auth.password == null ||
-        auth.confirmpassword == null ||
-        auth.password != null && auth.password.length < 6 ||
-        auth.confirmpassword != null && auth.confirmpassword.length < 6;
+    bool isValidSignUp = signupform.fullnameValue.isNotEmpty &&
+        signupform.passwordValue.isNotEmpty &&
+        signupform.passwordValue.length >= 6 &&
+        signupform.passwordValue.isNotEmpty &&
+        signupform.confirmpasswordValue.length >= 6 &&
+        signupform.emailValue.isNotEmpty &&
+        isEmail(signupform.emailValue) &&
+        equals(signupform.passwordValue, signupform.confirmpasswordValue);
 
-    bool isInvalidLogin = !auth.emailIsValid && auth.password == null ||
-        auth.password != null && auth.password.length < 6;
+    bool isValidSignIn = isEmail(signinform.emailValue) &&
+        signinform.passwordValue.isNotEmpty &&
+        signinform.passwordValue.length >= 6;
 
-    if (auth.isLoggedIn) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      });
+    if (auth.isAuthenticated) {
+      print('just got logged in now');
+      Navigator.pushReplacementNamed(context, '/dashboard');
     }
 
     return description == 'SIGN UP'
@@ -42,7 +47,7 @@ class Button extends StatelessWidget {
               width: 190,
               height: 55,
               child: FlatButton(
-                child: auth.validating
+                child: auth.isValidating
                     ? CircularProgressIndicator()
                     : Text(description,
                         style: TextStyle(
@@ -52,15 +57,14 @@ class Button extends StatelessWidget {
                           letterSpacing: 1.5,
                         )),
                 onPressed: () {
-                  //Navigator.pushReplacementNamed(context, '/dashboard');
-                  if (isInvalidSignUp) {
-                    return;
+                  if (isValidSignUp) {
+                    auth.setValidating(true);
+                    auth.createUserWithEmailAndPassword(
+                        signupform.emailValue, signupform.passwordValue);
                   }
-
-                  auth.triggerSubmit(true, description);
                 },
-                color: isInvalidSignUp
-                    ? Color(0xFF3edd9c).withOpacity(.6)
+                color: !isValidSignUp
+                    ? Color(0xFF3edd9c).withOpacity(.4)
                     : Color(0xFF3edd9c),
                 textColor: Colors.white,
                 padding: EdgeInsets.all(8.0),
@@ -72,7 +76,7 @@ class Button extends StatelessWidget {
               width: 190,
               height: 55,
               child: FlatButton(
-                child: auth.validating
+                child: auth.isValidating
                     ? CircularProgressIndicator()
                     : Text(description,
                         style: TextStyle(
@@ -82,14 +86,14 @@ class Button extends StatelessWidget {
                           letterSpacing: 1.5,
                         )),
                 onPressed: () {
-                  if (isInvalidLogin) {
-                    return;
+                  if (isValidSignIn) {
+                    auth.setValidating(true);
+                    auth.signInWithEmailAndPassword(
+                        signinform.emailValue, signinform.passwordValue);
                   }
-
-                  auth.triggerSubmit(true, description);
                 },
-                color: isInvalidLogin
-                    ? Color(0xFF3edd9c).withOpacity(.6)
+                color: !isValidSignIn
+                    ? Color(0xFF3edd9c).withOpacity(.4)
                     : Color(0xFF3edd9c),
                 textColor: Colors.white,
                 padding: EdgeInsets.all(8.0),

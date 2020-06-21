@@ -138,7 +138,7 @@ class _OnboardingState extends State<Onboarding> {
                                   fontSize: 18,
                                 )),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/login');
+                              Navigator.pushReplacementNamed(context, '/login');
                             },
                             color: Color(0xFF3edd9c),
                             textColor: Colors.white,
@@ -155,7 +155,7 @@ class _OnboardingState extends State<Onboarding> {
                           height: 55,
                           child: FlatButton(
                             onPressed: () {
-                              Navigator.pushNamed(context, '/signup');
+                              Navigator.pushReplacementNamed(context, '/signup');
                             },
                             color: Color(0xFF3edd9c),
                             textColor: Colors.white,

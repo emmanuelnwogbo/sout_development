@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sout_development/providers/auth.dart';
+import 'package:sout_development/providers/geolocation.dart';
 
 import 'package:geolocator/geolocator.dart';
 
@@ -20,10 +21,28 @@ class _HeaderState extends State<Header> {
       LocationOptions(accuracy: LocationAccuracy.high, distanceFilter: 10);
   StreamSubscription<Position> positionStream;
 
-  Future _trackLocation() async {
-    if (!locationTracking) {
-      setState(() {
-        locationTracking = true;
+  String truncateWithEllipsis(int cutoff, String myString) {
+    return (myString.length <= cutoff)
+        ? myString
+        : '${myString.substring(0, cutoff)}...';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final curScaleFactor = MediaQuery.of(context).textScaleFactor;
+    final auth = Provider.of<Auth>(context);
+    final geolocation = Provider.of<GeolocationProvider>(context);
+    print(
+        geolocation.realTimeLongLatOn.toString() + 'this is from the hrwader');
+    //final userName = auth.name == null ? '' : auth.name.toString();
+
+    Future _trackLocation() async {
+      if (!locationTracking) {
+        setState(() {
+          locationTracking = true;
+        });
+
+        geolocation.setrealLocationStatus(true);
 
         positionStream = geolocator
             .getPositionStream(locationOptions)
@@ -35,20 +54,14 @@ class _HeaderState extends State<Header> {
                   position.longitude.toString() +
                   'see this location');
         });
-      });
-    } else {
-      locationTracking = false;
-      positionStream?.cancel();
+      } else {
+        setState(() {
+          locationTracking = false;
+        });
+        geolocation.setrealLocationStatus(false);
+        positionStream?.cancel();
+      }
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final curScaleFactor = MediaQuery.of(context).textScaleFactor;
-
-    final auth = Provider.of<Auth>(context);
-
-    final userName = auth.name == null ? '' : auth.name;
 
     return Container(
         height: MediaQuery.of(context).size.height / 12,
@@ -60,15 +73,13 @@ class _HeaderState extends State<Header> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                widget.nameVisible
-                    ? Text(userName == null ? '' : userName,
-                        textAlign: TextAlign.start,
-                        style: TextStyle(
-                            letterSpacing: .8,
-                            color: Colors.black.withOpacity(.7),
-                            fontSize: 33.0 * curScaleFactor,
-                            fontWeight: FontWeight.bold))
-                    : Text(''),
+                Text(truncateWithEllipsis(5, auth.user.fullname),
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                        letterSpacing: .8,
+                        color: Colors.black.withOpacity(.7),
+                        fontSize: 33.0 * curScaleFactor,
+                        fontWeight: FontWeight.bold)),
                 SizedBox(height: 1.2),
                 widget.nameVisible
                     ? Text('June O7 2020, 6:39am',
@@ -122,12 +133,18 @@ class _HeaderState extends State<Header> {
                                           CrossAxisAlignment.center,
                                       children: <Widget>[
                                         AnimatedOpacity(
-                                            opacity: locationTracking ? 1 : 0,
+                                            opacity:
+                                                geolocation.realTimeLongLatOn
+                                                    ? 1
+                                                    : 0,
                                             duration:
                                                 Duration(milliseconds: 500),
                                             child: Text('ON')),
                                         AnimatedOpacity(
-                                            opacity: locationTracking ? 0 : 1,
+                                            opacity:
+                                                geolocation.realTimeLongLatOn
+                                                    ? 0
+                                                    : 1,
                                             duration:
                                                 Duration(milliseconds: 500),
                                             child: Text('OFF'))
@@ -137,7 +154,9 @@ class _HeaderState extends State<Header> {
                                     duration: const Duration(milliseconds: 500),
                                     curve: Curves.ease,
                                     top: 1.0,
-                                    right: locationTracking ? 1.0 : 40.0,
+                                    right: geolocation.realTimeLongLatOn
+                                        ? 1.0
+                                        : 40.0,
                                     bottom: 1.0,
                                     child: ClipRRect(
                                         borderRadius:
@@ -150,13 +169,9 @@ class _HeaderState extends State<Header> {
                                               '',
                                             ),
                                             onPressed: () {
-                                              setState(() {
-                                                locationTracking
-                                                    ? locationTracking = false
-                                                    : locationTracking = true;
-                                              });
+                                              _trackLocation();
                                             },
-                                            color: locationTracking
+                                            color: geolocation.realTimeLongLatOn
                                                 ? Color(0xFF3edd9c)
                                                 : Colors.red.withOpacity(.9),
                                             padding: EdgeInsets.all(8.0),

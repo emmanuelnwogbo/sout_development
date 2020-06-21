@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
-import 'package:sout_development/splash.dart';
+import 'package:sout_development/onboarding.dart';
 import 'package:sout_development/router.dart';
-import 'package:sout_development/authenticated/dashboard.dart';
 
 import 'package:provider/provider.dart';
 import 'package:sout_development/providers/auth.dart';
+import 'package:sout_development/providers/signup.dart';
+import 'package:sout_development/providers/signin.dart';
+import 'package:sout_development/providers/geolocation.dart';
+import 'package:sout_development/providers/contacts.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
 
@@ -56,23 +56,40 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-        create: (context) => Auth(),
-        child: MaterialApp(
-          title: 'Flutter Demo',
-          onGenerateRoute: Router.generateRoute,
-          initialRoute: '/',
-          navigatorKey: navigatorKey,
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            fontFamily: 'Helvetica',
-            primarySwatch: createMaterialColor(Color(0xFF3edd9c)),
-            primaryColor: createMaterialColor(Color(0xFF3edd9c)),
-            accentColor: Color(0xFFecf0f1),
-            visualDensity: VisualDensity.adaptivePlatformDensity,
-          ),
-          //home: MyHomePage(),
-        ));
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<Auth>(
+          create: (context) => Auth(),
+        ),
+        ChangeNotifierProvider<GeolocationProvider>(
+          create: (context) => GeolocationProvider(),
+        ),
+        ChangeNotifierProvider<ContactsProvider>(
+          create: (context) => ContactsProvider(),
+        ),
+        ChangeNotifierProvider<SignUpForm>(
+          create: (context) => SignUpForm(),
+        ),
+        ChangeNotifierProvider<SignInForm>(
+          create: (context) => SignInForm(),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        onGenerateRoute: Router.generateRoute,
+        //initialRoute: '/',
+        navigatorKey: navigatorKey,
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          fontFamily: 'Helvetica',
+          primarySwatch: createMaterialColor(Color(0xFF3edd9c)),
+          primaryColor: createMaterialColor(Color(0xFF3edd9c)),
+          accentColor: Color(0xFFecf0f1),
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: MyHomePage(),
+      ),
+    );
   }
 }
 
@@ -86,44 +103,21 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn googleSignIn = GoogleSignIn();
-
-  Future<String> signInWithGoogle() async {
-    final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
-    final GoogleSignInAuthentication googleSignInAuthentication =
-        await googleSignInAccount.authentication;
-    final AuthCredential credential = GoogleAuthProvider.getCredential(
-      accessToken: googleSignInAuthentication.accessToken,
-      idToken: googleSignInAuthentication.idToken,
-    );
-
-    //print(credential);
-  }
-
-  void signOutGoogle() async {}
 
   void initState() {
     super.initState();
-    //signInWithGoogle();
   }
-
-  //void _incrementCounter() {}
 
   @override
   Widget build(BuildContext context) {
-    bool dev = false;
-    final auth = Provider.of<Auth>(context);
-
     return Scaffold(
       body: SingleChildScrollView(
           child: Container(
               height: MediaQuery.of(context).size.height,
               width: MediaQuery.of(context).size.width,
               color: Theme.of(context).accentColor,
-              child: auth.isLoggedIn
-                  ? Dashboard()
-                  : Splash())), // This trailing comma makes auto-formatting nicer for build methods.
+              child:
+                  Onboarding())), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
