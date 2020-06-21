@@ -53,12 +53,15 @@ class Auth with ChangeNotifier {
     _user = new User(
         uid: user.uid,
         email: user.email,
-        fullname: user.email,
+        fullname: user.displayName,
         isEmailVerified: user.isEmailVerified);
 
     setAuthentication(true);
     setValidating(false);
     notifyListeners();
+
+    print(
+        _user.fullname.toString() + 'this is a new user yo or not in the auth provider');
   }
 
   User get user {
@@ -70,7 +73,6 @@ class Auth with ChangeNotifier {
       return null;
     }
 
-    print(user.toString() + ' this is the user that was created');
     setUser(user);
     notifyListeners();
 

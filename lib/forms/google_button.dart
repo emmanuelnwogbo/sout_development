@@ -19,58 +19,35 @@ class _GooglebtnState extends State<Googlebtn> {
   final GoogleSignIn googleSignIn = GoogleSignIn();
   FirebaseUser _user;
 
-  String truncateWithEllipsis(int cutoff, String myString) {
-    return (myString.length <= cutoff)
-        ? myString
-        : '${myString.substring(0, cutoff)}...';
-  }
-
-  Future<void> signInWithGoogle() async {
-    final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
-    final GoogleSignInAuthentication googleSignInAuthentication =
-        await googleSignInAccount.authentication;
-    final AuthCredential credential = GoogleAuthProvider.getCredential(
-      accessToken: googleSignInAuthentication.accessToken,
-      idToken: googleSignInAuthentication.idToken,
-    );
-
-    final AuthResult authResult = await _auth.signInWithCredential(credential);
-    final FirebaseUser user = authResult.user;
-    //final userToken = await user.getIdToken();
-
-    if (user.email != null) {
-      print(user.toString());
-      setState(() {
-        _user = user;
-      });
-
-      Firestore.instance
-          .collection('users')
-          .where("id", isEqualTo: _user.uid)
-          .snapshots()
-          .listen((data) => {
-                print(data.documents.length.toString() +
-                    data.documents.toString() +
-                    'this is the snapshot'),
-                if (data.documents.length == 0)
-                  {
-                    Firestore.instance.collection('users').add({
-                      'email': _user.email,
-                      'fullname': _user.displayName,
-                      'id': _user.uid
-                    })
-                  }
-              });
-
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final curScaleFactor = MediaQuery.of(context).textScaleFactor;
     final String fontFamily = 'HelveticaNeue';
     final auth = Provider.of<Auth>(context);
+
+    Future<void> signInWithGoogle() async {
+      final GoogleSignInAccount googleSignInAccount =
+          await googleSignIn.signIn();
+      final GoogleSignInAuthentication googleSignInAuthentication =
+          await googleSignInAccount.authentication;
+      final AuthCredential credential = GoogleAuthProvider.getCredential(
+        accessToken: googleSignInAuthentication.accessToken,
+        idToken: googleSignInAuthentication.idToken,
+      );
+
+      final AuthResult authResult =
+          await _auth.signInWithCredential(credential);
+      final FirebaseUser user = authResult.user;
+      //final userToken = await user.getIdToken();
+
+      if (user.email != null) {
+        setState(() {
+          _user = user;
+        });
+
+        auth.setUser(user);
+      }
+    }
 
     return ClipRRect(
         borderRadius: BorderRadius.circular(30.0),

@@ -73,7 +73,7 @@ class _HeaderState extends State<Header> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(truncateWithEllipsis(5, auth.user.fullname),
+                Text(truncateWithEllipsis(4, auth.user.fullname),
                     textAlign: TextAlign.start,
                     style: TextStyle(
                         letterSpacing: .8,
