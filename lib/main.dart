@@ -9,8 +9,10 @@ import 'package:provider/provider.dart';
 import 'package:sout_development/providers/auth.dart';
 import 'package:sout_development/providers/signup.dart';
 import 'package:sout_development/providers/signin.dart';
-import 'package:sout_development/providers/geolocation.dart';
+import 'package:sout_development/providers/geolocator.dart';
 import 'package:sout_development/providers/contacts.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
 
@@ -103,21 +105,60 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  String _isAuthenticated;
+
+  void retrieveuserdetails() async {
+    final SharedPreferences prefs = await _prefs;
+    String soutUserid = prefs.getString('soutuserid');
+
+    if (soutUserid != null) {
+      setState(() {
+        _isAuthenticated = 'true';
+      });
+    } else {
+      setState(() {
+        _isAuthenticated = 'false';
+      });
+    }
+  }
 
   void initState() {
     super.initState();
+    retrieveuserdetails();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-          child: Container(
-              height: MediaQuery.of(context).size.height,
-              width: MediaQuery.of(context).size.width,
-              color: Theme.of(context).accentColor,
-              child:
-                  Onboarding())), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+    final auth = Provider.of<Auth>(context);
+
+    if (_isAuthenticated == 'true') {
+      auth.retrieveuserdetails();
+
+      Future.delayed(const Duration(milliseconds: 1), () {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      });
+    }
+
+    return _isAuthenticated == 'true'
+        ? Container(
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            color: Theme.of(context).primaryColor,
+          )
+        : Scaffold(
+            body: SingleChildScrollView(
+                child: Container(
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width,
+                    color: Theme.of(context).accentColor,
+                    child: _isAuthenticated != null
+                        ? Onboarding()
+                        : Container(
+                            height: MediaQuery.of(context).size.height,
+                            width: MediaQuery.of(context).size.width,
+                            color: Theme.of(context).primaryColor,
+                          ))), // This trailing comma makes auto-formatting nicer for build methods.
+          );
   }
 }

@@ -43,6 +43,7 @@ dependencies:
   string_validator: ^0.1.4
   path_provider: ^1.6.11
   path: ^1.6.4
+  shared_preferences: ^0.5.7
 
 
   # The following adds the Cupertino Icons font to your application.

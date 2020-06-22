@@ -2,9 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sout_development/providers/auth.dart';
-import 'package:sout_development/providers/geolocation.dart';
+import 'package:sout_development/providers/geolocator.dart';
 
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Header extends StatefulWidget {
   Header(this.nameVisible);
@@ -15,16 +16,43 @@ class Header extends StatefulWidget {
 }
 
 class _HeaderState extends State<Header> {
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   bool locationTracking = false;
+  String username = '';
+
   final geolocator = Geolocator();
   final locationOptions =
       LocationOptions(accuracy: LocationAccuracy.high, distanceFilter: 10);
-  StreamSubscription<Position> positionStream;
+  Position _positionStream;
+
+  Future getRealTimeLocation() async {
+    StreamSubscription<Position> positionStream = geolocator
+        .getPositionStream(locationOptions)
+        .listen((Position position) {
+      setState(() {
+        _positionStream = position;
+      });
+    });
+  }
 
   String truncateWithEllipsis(int cutoff, String myString) {
+    if (myString == null) {
+      return '';
+    }
+
     return (myString.length <= cutoff)
         ? myString
         : '${myString.substring(0, cutoff)}...';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getRealTimeLocation();
+
+    setState(() {
+      locationTracking = true;
+    });
   }
 
   @override
@@ -32,35 +60,32 @@ class _HeaderState extends State<Header> {
     final curScaleFactor = MediaQuery.of(context).textScaleFactor;
     final auth = Provider.of<Auth>(context);
     final geolocation = Provider.of<GeolocationProvider>(context);
-    print(
-        geolocation.realTimeLongLatOn.toString() + 'this is from the hrwader');
-    //final userName = auth.name == null ? '' : auth.name.toString();
 
-    Future _trackLocation() async {
-      if (!locationTracking) {
+    void getlocalid() async {
+      final SharedPreferences prefs = await _prefs;
+      String soutUserid = prefs.getString('soutuserid');
+      String soutUsername = prefs.getString('soutusername');
+      if (soutUserid != null) {
         setState(() {
-          locationTracking = true;
+          username = soutUsername;
         });
-
-        geolocation.setrealLocationStatus(true);
-
-        positionStream = geolocator
-            .getPositionStream(locationOptions)
-            .listen((Position position) {
-          print(position == null
-              ? 'Unknown'
-              : position.latitude.toString() +
-                  ', ' +
-                  position.longitude.toString() +
-                  'see this location');
-        });
-      } else {
-        setState(() {
-          locationTracking = false;
-        });
-        geolocation.setrealLocationStatus(false);
-        positionStream?.cancel();
       }
+    }
+
+    if (auth.user == null) {
+      getlocalid();
+    }
+
+    if (_positionStream != null) {
+      geolocation.setPosition(_positionStream);
+    }
+
+    if (geolocation.locationOn) {
+      setState(() {
+        locationTracking = true;
+      });
+    } else {
+      locationTracking = false;
     }
 
     return Container(
@@ -73,7 +98,10 @@ class _HeaderState extends State<Header> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(truncateWithEllipsis(4, auth.user.fullname),
+                Text(
+                    auth.user == null
+                        ? truncateWithEllipsis(4, username)
+                        : truncateWithEllipsis(4, auth.user.displayname),
                     textAlign: TextAlign.start,
                     style: TextStyle(
                         letterSpacing: .8,
@@ -82,7 +110,7 @@ class _HeaderState extends State<Header> {
                         fontWeight: FontWeight.bold)),
                 SizedBox(height: 1.2),
                 widget.nameVisible
-                    ? Text('June O7 2020, 6:39am',
+                    ? Text('',
                         textAlign: TextAlign.start,
                         style: TextStyle(
                             letterSpacing: .8,
@@ -116,7 +144,7 @@ class _HeaderState extends State<Header> {
                         color: Colors.white,
                         child: FlatButton(
                             onPressed: () {
-                              _trackLocation();
+                              geolocation.setLocation();
                             },
                             padding: EdgeInsets.all(0.0),
                             child: Stack(
@@ -133,18 +161,12 @@ class _HeaderState extends State<Header> {
                                           CrossAxisAlignment.center,
                                       children: <Widget>[
                                         AnimatedOpacity(
-                                            opacity:
-                                                geolocation.realTimeLongLatOn
-                                                    ? 1
-                                                    : 0,
+                                            opacity: locationTracking ? 1 : 0,
                                             duration:
                                                 Duration(milliseconds: 500),
                                             child: Text('ON')),
                                         AnimatedOpacity(
-                                            opacity:
-                                                geolocation.realTimeLongLatOn
-                                                    ? 0
-                                                    : 1,
+                                            opacity: locationTracking ? 0 : 1,
                                             duration:
                                                 Duration(milliseconds: 500),
                                             child: Text('OFF'))
@@ -154,9 +176,7 @@ class _HeaderState extends State<Header> {
                                     duration: const Duration(milliseconds: 500),
                                     curve: Curves.ease,
                                     top: 1.0,
-                                    right: geolocation.realTimeLongLatOn
-                                        ? 1.0
-                                        : 40.0,
+                                    right: locationTracking ? 1.0 : 40.0,
                                     bottom: 1.0,
                                     child: ClipRRect(
                                         borderRadius:
@@ -169,9 +189,9 @@ class _HeaderState extends State<Header> {
                                               '',
                                             ),
                                             onPressed: () {
-                                              _trackLocation();
+                                              geolocation.setLocation();
                                             },
-                                            color: geolocation.realTimeLongLatOn
+                                            color: locationTracking
                                                 ? Color(0xFF3edd9c)
                                                 : Colors.red.withOpacity(.9),
                                             padding: EdgeInsets.all(8.0),

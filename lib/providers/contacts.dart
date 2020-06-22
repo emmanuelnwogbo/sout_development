@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ContactInit {
   ContactInit(this.name, this.photo, this.numbers);
@@ -10,29 +11,25 @@ class ContactInit {
 }
 
 class ContactsProvider extends ChangeNotifier {
-  List<ContactInit> _contacts = [];
-  List _phonenums = [];
+  
+  List<String> _contacts = [];
+  List<String> _contactLabels = [];
 
-  List get contacts {
+  get contacts {
     return _contacts;
   }
 
-  List get phonenums {
-    return _phonenums;
+  get contactLabels {
+    return _contactLabels;
   }
 
-  void setContacts(String name, Uint8List photo, numbers) {
-    var nums = _phonenums;
-    var contact = new ContactInit(name, photo, numbers);
-    var contactsArr = _contacts;
+  setContacts(contacts) {
+    _contacts = contacts;
+    notifyListeners();
+  }
 
-    numbers.forEach((number) => {nums.add(number),});
-    _phonenums = nums;
-    contactsArr.add(contact);
-    _contacts = contactsArr;
-    print(contact.toString());
-    print(_contacts.toString());
-
+  setContactLabels(contactLabels) {
+    _contactLabels = contactLabels;
     notifyListeners();
   }
 }

@@ -108,7 +108,6 @@ class _InputState extends State<Input> {
                               }
 
                               if (widget.authType == 'login') {
-                                print('hello from login' + _value.toString());
                                 widget.placeholder == 'Email'
                                     ? signinform.setEmail(_value)
                                     : signinform.setPassword(_value);

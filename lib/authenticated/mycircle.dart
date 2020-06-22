@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sout_development/authenticated/header.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:sout_development/providers/contacts.dart';
 
 class Person {
   Person(this.name, this.photo);
@@ -18,6 +21,9 @@ class MyCircle extends StatefulWidget {
 
 class _MyCircleState extends State<MyCircle> {
   bool popUpOpen = false;
+  List<String> addedNums = [];
+  List<String> displayValues = [];
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   Future<PermissionStatus> _getPermission() async {
     final PermissionStatus permission = await Permission.contacts.status;
@@ -38,13 +44,40 @@ class _MyCircleState extends State<MyCircle> {
     return permissionStatus;
   }
 
+  void _getContactsStorage() async {
+    final SharedPreferences prefs = await _prefs;
+    var contacts = prefs.getStringList('locallyStoredContacts');
+    var contactsLabel = prefs.getStringList('locallyStoredContactsDisplay');
+
+    if (contacts != null) {
+      setState(() {
+        addedNums = contacts;
+        displayValues = contactsLabel;
+      });
+    }
+  }
+
+  void setContactsToStorage() async {
+    final SharedPreferences prefs = await _prefs;
+    prefs.setStringList('locallyStoredContacts', addedNums);
+    prefs.setStringList('locallyStoredContactsDisplay', displayValues);
+  }
+
   @override
   void initState() {
     _getPermissionData();
+    _getContactsStorage();
     super.initState();
   }
 
   Widget build(BuildContext context) {
+    final contactsProvider = Provider.of<ContactsProvider>(context);
+
+    setState(() {
+      addedNums = contactsProvider.contacts;
+      displayValues = contactsProvider.contactLabels;
+    });
+
     return Material(
         child: SingleChildScrollView(
             child: Container(
@@ -97,7 +130,8 @@ class _MyCircleState extends State<MyCircle> {
                                                           .height /
                                                       1.8,
                                                   child: ListView.builder(
-                                                      itemCount: circle.length,
+                                                      itemCount:
+                                                          displayValues.length,
                                                       itemBuilder:
                                                           (BuildContext context,
                                                               int index) {
@@ -134,24 +168,13 @@ class _MyCircleState extends State<MyCircle> {
                                                                               .center,
                                                                       children: <
                                                                           Widget>[
-                                                                        ClipRRect(
-                                                                            borderRadius:
-                                                                                BorderRadius.circular(100.0),
-                                                                            child: AspectRatio(
-                                                                              aspectRatio: 6.0 / 6.0,
-                                                                              child: Image(
-                                                                                  image: NetworkImage(
-                                                                                    circle[index].photo,
-                                                                                  ),
-                                                                                  fit: BoxFit.cover),
-                                                                            )),
                                                                         SizedBox(
                                                                           width:
                                                                               20.0,
                                                                         ),
                                                                         Text(
-                                                                            circle[index]
-                                                                                .name,
+                                                                            displayValues[
+                                                                                index],
                                                                             textAlign: TextAlign
                                                                                 .start,
                                                                             style: TextStyle(
@@ -164,15 +187,29 @@ class _MyCircleState extends State<MyCircle> {
                                                                 Positioned(
                                                                   right: 1.0,
                                                                   bottom: 1.0,
-                                                                  child: GestureDetector(
-                                                                      onTap: () {},
-                                                                      child: Text('Edit',
-                                                                          style: TextStyle(
-                                                                            color:
-                                                                                Color(0xFF3edd9c),
-                                                                            fontSize:
-                                                                                16.0,
-                                                                          ))),
+                                                                  child:
+                                                                      GestureDetector(
+                                                                          onTap:
+                                                                              () {
+                                                                            //addedNums
+                                                                            var dummyArr =
+                                                                                displayValues;
+                                                                            dummyArr.remove(displayValues[index]);
+                                                                            setState(() {
+                                                                              displayValues = dummyArr;
+                                                                            });
+                                                                            contactsProvider.setContactLabels(displayValues);
+                                                                            setContactsToStorage();
+                                                                          },
+                                                                          child:
+                                                                              Container(
+                                                                            child:
+                                                                                Icon(
+                                                                              Icons.remove_circle,
+                                                                              color: Color(0xFF3edd9c),
+                                                                              size: 22.0,
+                                                                            ),
+                                                                          )),
                                                                 )
                                                               ],
                                                             ));

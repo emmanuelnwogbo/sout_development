@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:sout_development/providers/models/user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Auth with ChangeNotifier {
   final _firebaseAuth = FirebaseAuth.instance;
@@ -12,6 +13,8 @@ class Auth with ChangeNotifier {
   bool _isAuthenticated = false;
   bool _isValidating = false;
   User _user;
+
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   setId(id) {
     _id = id;
@@ -50,22 +53,53 @@ class Auth with ChangeNotifier {
   }
 
   setUser(user) {
+    String displayname = '';
+    user.displayName == null
+        ? displayname = user.email
+        : displayname = user.displayName;
+
     _user = new User(
         uid: user.uid,
         email: user.email,
-        fullname: user.displayName,
+        displayname: displayname,
         isEmailVerified: user.isEmailVerified);
+
+    saveId(_user.uid, _user.email, _user.isEmailVerified, _user.displayname);
 
     setAuthentication(true);
     setValidating(false);
     notifyListeners();
-
-    print(
-        _user.fullname.toString() + 'this is a new user yo or not in the auth provider');
   }
 
   User get user {
     return _user;
+  }
+
+  void saveId(id, email, isverified, name) async {
+    final SharedPreferences prefs = await _prefs;
+    prefs.setString('soutuserid', id);
+    prefs.setString('soutuseremail', email);
+    prefs.setString('soutusername', name.toString());
+    prefs.setString('soutuserverification', isverified.toString());
+  }
+
+  void retrieveuserdetails() async {
+    final SharedPreferences prefs = await _prefs;
+    String soutUserid = prefs.getString('soutuserid');
+    String soutUseremail = prefs.getString('soutuseremail');
+    String soutUserverifi = prefs.getString('soutuserverification');
+    String soutUsername = prefs.getString('soutusername');
+
+    if (soutUserid != null) {
+      setUserFromLocal(soutUserid, soutUseremail, soutUserverifi, soutUsername);
+      notifyListeners();
+    }
+  }
+
+  void setUserFromLocal(id, email, isverified, name) {
+    User user = new User(
+        uid: id, email: email, displayname: name, isEmailVerified: isverified);
+    setUser(user);
   }
 
   FirebaseUser _userFromFirebase(FirebaseUser user) {
@@ -74,6 +108,7 @@ class Auth with ChangeNotifier {
     }
 
     setUser(user);
+    setId(user.uid);
     notifyListeners();
 
     return user;
