@@ -16,7 +16,6 @@ class _ContactsViewState extends State<ContactsView> {
 
   Iterable<Contact> _contacts = [];
   List<String> addedNums = [];
-  List<String> displayValues = [];
 
   Future<void> _getContacts() async {
     final Iterable<Contact> contacts =
@@ -29,18 +28,15 @@ class _ContactsViewState extends State<ContactsView> {
   void setContactsToStorage() async {
     final SharedPreferences prefs = await _prefs;
     prefs.setStringList('locallyStoredContacts', addedNums);
-    prefs.setStringList('locallyStoredContactsDisplay', displayValues);
   }
 
   void _getContactsStorage() async {
     final SharedPreferences prefs = await _prefs;
     var contacts = prefs.getStringList('locallyStoredContacts');
-    var contactsLabel = prefs.getStringList('locallyStoredContactsDisplay');
 
     if (contacts != null) {
       setState(() {
         addedNums = contacts;
-        displayValues = contactsLabel;
       });
     }
   }
@@ -59,7 +55,6 @@ class _ContactsViewState extends State<ContactsView> {
   void initState() {
     _getContacts();
     _getContactsStorage();
-    setState(() {});
     super.initState();
   }
 
@@ -104,47 +99,21 @@ class _ContactsViewState extends State<ContactsView> {
                     reverse: false,
                     itemCount: _contacts.length,
                     itemBuilder: (_, int index) {
+                      var numbers = _contacts.elementAt(index).phones.toList();
                       return _contacts.elementAt(index).phones.length > 0
                           ? GestureDetector(
                               onTap: () {
-                                _contacts
-                                    .elementAt(index)
-                                    .phones
-                                    .toList()
-                                    .forEach((number) {
-                                  if (_contacts != null &&
-                                      addedNums
-                                          .contains(number.value.toString())) {
-                                    var nums = addedNums;
-                                    var value = displayValues;
-                                    nums.remove(number.value.toString());
-                                    value.remove(
-                                        _contacts.elementAt(index).displayName);
-                                    setState(() {
-                                      addedNums = nums;
-                                      displayValues = value;
-                                    });
-                                    setContactsToStorage();
-                                    contactsProvider.setContacts(addedNums);
-                                    contactsProvider
-                                        .setContactLabels(displayValues);
-                                  } else {
-                                    var nums = addedNums;
-                                    var value = displayValues;
-
-                                    value.add(
-                                        _contacts.elementAt(index).displayName);
-                                    nums.add(number.value.toString());
-                                    setState(() {
-                                      addedNums = nums;
-                                      displayValues = value;
-                                    });
-                                    setContactsToStorage();
-                                    contactsProvider.setContacts(addedNums);
-                                    contactsProvider
-                                        .setContactLabels(displayValues);
-                                  }
+                                numbers.forEach((number) {
+                                  var nums = addedNums;
+                                  nums.contains(number.value.toString())
+                                      ? nums.remove(number.value.toString())
+                                      : nums.add(number.value.toString());
+                                  setState(() {
+                                    addedNums = nums;
+                                  });
                                 });
+
+                                setContactsToStorage();
                               },
                               child: Container(
                                   height: 65,
@@ -190,6 +159,21 @@ class _ContactsViewState extends State<ContactsView> {
                                                         )),
                                                   ],
                                                 ),
+                                                addedNums.contains(_contacts
+                                                        .elementAt(index)
+                                                        .phones
+                                                        .toList()[0]
+                                                        .value
+                                                        .toString())
+                                                    ? Container(
+                                                        child: Icon(
+                                                          Icons.check,
+                                                          color:
+                                                              Color(0xFF3edd9c),
+                                                          size: 22.0,
+                                                        ),
+                                                      )
+                                                    : Container()
                                               ],
                                             ),
                                           )))))

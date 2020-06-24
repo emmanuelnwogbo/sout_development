@@ -13,6 +13,7 @@ import 'package:sout_development/providers/geolocator.dart';
 import 'package:sout_development/providers/contacts.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
 
@@ -51,6 +52,9 @@ MaterialColor createMaterialColor(Color color) {
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb) _setTargetPlatformForDesktop();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   runApp(MyApp());
 }
 

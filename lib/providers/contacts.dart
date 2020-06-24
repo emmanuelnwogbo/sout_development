@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class ContactInit {
   ContactInit(this.name, this.photo, this.numbers);
@@ -11,9 +12,13 @@ class ContactInit {
 }
 
 class ContactsProvider extends ChangeNotifier {
-  
   List<String> _contacts = [];
   List<String> _contactLabels = [];
+
+  final String contactId = '_id';
+  final String contactNumber = 'number';
+  final String contactName = 'name';
+  final String numbersLength = 'lengthofnums';
 
   get contacts {
     return _contacts;

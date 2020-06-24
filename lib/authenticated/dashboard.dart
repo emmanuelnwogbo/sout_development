@@ -10,6 +10,7 @@ import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:sout_development/providers/geolocator.dart';
 import 'package:sout_development/providers/contacts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Dashboard extends StatefulWidget {
   @override
@@ -99,6 +100,32 @@ class _DashboardState extends State<Dashboard> {
     try {
       String _result = await sendSMS(message: body, recipients: recipents);
     } catch (error) {}
+  }
+
+  Future<PermissionStatus> _requestPermissionContacts() async {
+    final PermissionStatus permission = await Permission.contacts.status;
+    if (permission != PermissionStatus.granted &&
+        permission != PermissionStatus.denied) {
+      final Map<Permission, PermissionStatus> permissionStatus =
+          await [Permission.contacts].request();
+      return permissionStatus[Permission.contacts] ??
+          PermissionStatus.undetermined;
+    } else {
+      return permission;
+    }
+  }
+
+  Future<PermissionStatus> _getPermissionDataContacts() async {
+    final PermissionStatus permissionStatus =
+        await _requestPermissionContacts();
+    //print(permissionStatus);
+    return permissionStatus;
+  }
+
+  @override
+  void initState() {
+    _getPermissionDataContacts();
+    super.initState();
   }
 
   @override
