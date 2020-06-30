@@ -1,21 +1,13 @@
-import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
-
-import 'package:sout_development/onboarding.dart';
-import 'package:sout_development/router.dart';
-
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sout_development/providers/auth.dart';
-import 'package:sout_development/providers/signup.dart';
-import 'package:sout_development/providers/signin.dart';
-import 'package:sout_development/providers/geolocator.dart';
-import 'package:sout_development/providers/contacts.dart';
-
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 
-final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
+import 'package:sout_development/pages/onboarding.dart';
+
+import 'package:sout_development/providers/geoprovider.dart';
 
 void _setTargetPlatformForDesktop() {
   TargetPlatform targetPlatform;
@@ -58,32 +50,19 @@ void main() {
   runApp(MyApp());
 }
 
+final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
+
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<Auth>(
-          create: (context) => Auth(),
-        ),
-        ChangeNotifierProvider<GeolocationProvider>(
-          create: (context) => GeolocationProvider(),
-        ),
-        ChangeNotifierProvider<ContactsProvider>(
-          create: (context) => ContactsProvider(),
-        ),
-        ChangeNotifierProvider<SignUpForm>(
-          create: (context) => SignUpForm(),
-        ),
-        ChangeNotifierProvider<SignInForm>(
-          create: (context) => SignInForm(),
+        ChangeNotifierProvider<GeoProvider>(
+          create: (context) => GeoProvider(),
         ),
       ],
       child: MaterialApp(
-        title: 'Flutter Demo',
-        onGenerateRoute: Router.generateRoute,
-        //initialRoute: '/',
+        title: 'Sout',
         navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -93,76 +72,20 @@ class MyApp extends StatelessWidget {
           accentColor: Color(0xFFecf0f1),
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: MyHomePage(),
+        home: Home(),
       ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
+class Home extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomeState createState() => _HomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  String _isAuthenticated;
-
-  void retrieveuserdetails() async {
-    final SharedPreferences prefs = await _prefs;
-    String soutUserid = prefs.getString('soutuserid');
-
-    if (soutUserid != null) {
-      setState(() {
-        _isAuthenticated = 'true';
-      });
-    } else {
-      setState(() {
-        _isAuthenticated = 'false';
-      });
-    }
-  }
-
-  void initState() {
-    super.initState();
-    retrieveuserdetails();
-  }
-
+class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<Auth>(context);
-
-    if (_isAuthenticated == 'true') {
-      auth.retrieveuserdetails();
-
-      Future.delayed(const Duration(milliseconds: 1), () {
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      });
-    }
-
-    return _isAuthenticated == 'true'
-        ? Container(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            color: Theme.of(context).primaryColor,
-          )
-        : Scaffold(
-            body: SingleChildScrollView(
-                child: Container(
-                    height: MediaQuery.of(context).size.height,
-                    width: MediaQuery.of(context).size.width,
-                    color: Theme.of(context).accentColor,
-                    child: _isAuthenticated != null
-                        ? Onboarding()
-                        : Container(
-                            height: MediaQuery.of(context).size.height,
-                            width: MediaQuery.of(context).size.width,
-                            color: Theme.of(context).primaryColor,
-                          ))), // This trailing comma makes auto-formatting nicer for build methods.
-          );
+    return Onboarding();
   }
 }
