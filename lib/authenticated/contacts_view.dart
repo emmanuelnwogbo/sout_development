@@ -13,32 +13,26 @@ class ContactsView extends StatefulWidget {
 
 class _ContactsViewState extends State<ContactsView> {
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-
-  Iterable<Contact> _contacts = [];
   List<String> addedNums = [];
-
-  Future<void> _getContacts() async {
-    final Iterable<Contact> contacts =
-        (await ContactsService.getContacts()).toList();
-    setState(() {
-      _contacts = contacts;
-    });
-  }
-
-  void setContactsToStorage() async {
-    final SharedPreferences prefs = await _prefs;
-    prefs.setStringList('locallyStoredContacts', addedNums);
-  }
+  List<String> addedNumsActive = [];
+  String currentText = '';
 
   void _getContactsStorage() async {
     final SharedPreferences prefs = await _prefs;
-    var contacts = prefs.getStringList('locallyStoredContacts');
+    var contacts = prefs.getStringList('locallyStoredContactsVal');
+    var circleNames = prefs.getStringList('locallyStoredCircleVal');
 
     if (contacts != null) {
       setState(() {
-        addedNums = contacts;
+        addedNums = contacts.toSet().toList();
+        addedNumsActive = circleNames != null ? circleNames : [];
       });
     }
+  }
+
+  void _setCircleLocal() async {
+    final SharedPreferences prefs = await _prefs;
+    prefs.setStringList('locallyStoredCircleVal', addedNumsActive);
   }
 
   String truncateWithEllipsis(int cutoff, String myString) {
@@ -53,7 +47,6 @@ class _ContactsViewState extends State<ContactsView> {
 
   @override
   void initState() {
-    _getContacts();
     _getContactsStorage();
     super.initState();
   }
@@ -61,22 +54,25 @@ class _ContactsViewState extends State<ContactsView> {
   @override
   Widget build(BuildContext context) {
     final curScaleFactor = MediaQuery.of(context).textScaleFactor;
-    final contactsProvider = Provider.of<ContactsProvider>(context);
 
-    return _contacts != null && _contacts.length > 0
-        ? Container(
+    return Material(
+        child: Container(
             color: Colors.white,
             height: MediaQuery.of(context).size.height,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
+                SizedBox(
+                  height: 40.0,
+                ),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Container(
-                        height: 20,
+                        height: 45,
+                        width: MediaQuery.of(context).size.width,
                         child: Center(
                             child: Padding(
                           padding: EdgeInsets.only(
@@ -85,110 +81,139 @@ class _ContactsViewState extends State<ContactsView> {
                               textAlign: TextAlign.start,
                               style: TextStyle(
                                 letterSpacing: .8,
-                                color: Colors.black.withOpacity(.6),
-                                fontSize: 15.0 * curScaleFactor,
+                                color: Colors.black,
+                                fontSize: 18.0 * curScaleFactor,
                                 fontFamily: fontFamily,
                                 fontWeight: FontWeight.w700,
                               )),
                         )))
                   ],
                 ),
+                ClipRRect(
+                    borderRadius: BorderRadius.circular(1),
+                    child: Container(
+                        height: 40,
+                        width: MediaQuery.of(context).size.width,
+                        child: Center(
+                            child: TextField(
+                                decoration: InputDecoration(
+                                  hintStyle: TextStyle(fontSize: 19),
+                                  hintText: 'Search contacts',
+                                  suffixIcon: Icon(Icons.search),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.all(20),
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    currentText = value;
+                                  });
+                                })),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border:
+                              Border.all(color: Colors.black.withOpacity(.6)),
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(1),
+                              topRight: Radius.circular(1),
+                              bottomLeft: Radius.circular(1),
+                              bottomRight: Radius.circular(1)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.5),
+                              spreadRadius: 5,
+                              blurRadius: 7,
+                              offset:
+                                  Offset(0, 3), // changes position of shadow
+                            ),
+                          ],
+                        ))),
                 Container(
-                  height: MediaQuery.of(context).size.height - 20,
+                  height: MediaQuery.of(context).size.height - 135,
                   child: new ListView.builder(
                     reverse: false,
-                    itemCount: _contacts.length,
+                    itemCount: addedNums.length,
                     itemBuilder: (_, int index) {
-                      var numbers = _contacts.elementAt(index).phones.toList();
-                      return _contacts.elementAt(index).phones.length > 0
+                      var item = addedNums[index];
+                      return item
+                              .trim()
+                              .toLowerCase()
+                              .contains(currentText.trim().toLowerCase())
                           ? GestureDetector(
                               onTap: () {
-                                numbers.forEach((number) {
-                                  var nums = addedNums;
-                                  nums.contains(number.value.toString())
-                                      ? nums.remove(number.value.toString())
-                                      : nums.add(number.value.toString());
-                                  setState(() {
-                                    addedNums = nums;
-                                  });
+                                var newArr = addedNumsActive;
+                                newArr.contains(item)
+                                    ? newArr.remove(item)
+                                    : newArr.add(item);
+                                setState(() {
+                                  addedNumsActive = newArr;
                                 });
 
-                                setContactsToStorage();
+                                _setCircleLocal();
                               },
-                              child: Container(
-                                  height: 65,
-                                  child: Card(
-                                      child: Padding(
-                                          padding: EdgeInsets.only(
-                                              left: 10, right: 10),
-                                          child: Center(
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: <Widget>[
-                                                Row(
-                                                  children: <Widget>[
-                                                    Container(
-                                                        child: CircleAvatar(
-                                                      backgroundImage:
-                                                          MemoryImage(_contacts
-                                                              .elementAt(index)
-                                                              .avatar),
-                                                    )),
-                                                    SizedBox(
-                                                      width: 10,
-                                                    ),
-                                                    Text(
-                                                        truncateWithEllipsis(
-                                                            18,
-                                                            _contacts
-                                                                .elementAt(
-                                                                    index)
-                                                                .displayName),
-                                                        textAlign:
-                                                            TextAlign.start,
-                                                        style: TextStyle(
-                                                          fontSize: 13.0 *
-                                                              curScaleFactor,
-                                                          fontFamily:
-                                                              fontFamily,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                          letterSpacing: 1.5,
-                                                        )),
-                                                  ],
+                              child: Padding(
+                                  padding: EdgeInsets.only(
+                                      top: 5.0, bottom: 5.0, left: 10.0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(1),
+                                          topRight: Radius.circular(1),
+                                          bottomLeft: Radius.circular(1),
+                                          bottomRight: Radius.circular(1)),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.1),
+                                          spreadRadius: 5,
+                                          blurRadius: 7,
+                                          offset: Offset(0,
+                                              3), // changes position of shadow
+                                        ),
+                                      ],
+                                    ),
+                                    height: 45,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: <Widget>[
+                                            SizedBox(width: 10.0),
+                                            Text(truncateWithEllipsis(18, item),
+                                                textAlign: TextAlign.start,
+                                                style: TextStyle(
+                                                  fontSize:
+                                                      13.0 * curScaleFactor,
+                                                  fontFamily: fontFamily,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 1.5,
+                                                ))
+                                          ],
+                                        ),
+                                        addedNumsActive.contains(item)
+                                            ? Container(
+                                                child: Center(
+                                                  child: Icon(
+                                                    Icons.check,
+                                                    color: Color(0xFF3edd9c),
+                                                    size: 22.0,
+                                                  ),
                                                 ),
-                                                addedNums.contains(_contacts
-                                                        .elementAt(index)
-                                                        .phones
-                                                        .toList()[0]
-                                                        .value
-                                                        .toString())
-                                                    ? Container(
-                                                        child: Icon(
-                                                          Icons.check,
-                                                          color:
-                                                              Color(0xFF3edd9c),
-                                                          size: 22.0,
-                                                        ),
-                                                      )
-                                                    : Container()
-                                              ],
-                                            ),
-                                          )))))
+                                              )
+                                            : Container()
+                                      ],
+                                    ),
+                                  )),
+                            )
                           : Container();
                     },
                   ),
                 )
               ],
-            ))
-        : Container(
-            color: Colors.white,
-            height: MediaQuery.of(context).size.height,
-            child: Center(
-                child: const CircularProgressIndicator(
-                    backgroundColor: Color(0xFF3edd9c))),
-          );
+            )));
   }
 }

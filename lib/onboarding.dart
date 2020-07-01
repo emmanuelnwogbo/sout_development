@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sout_development/data/onboarding_images.dart';
-
+import 'package:contacts_service/contacts_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 final String fontFamily = 'HelveticaNeue';
@@ -11,8 +12,14 @@ class Onboarding extends StatefulWidget {
 }
 
 class _OnboardingState extends State<Onboarding> {
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   List<Widget> indicators = new List();
+  Iterable<Contact> _contacts = [];
+  List<String> addedNums = [];
+  List<String> addedNamesState = [];
   var currentPage = 0;
+  bool alertWidget = false;
+  String alertMessage = '';
 
   PageController controller =
       PageController(initialPage: 0, viewportFraction: 1);
@@ -23,6 +30,18 @@ class _OnboardingState extends State<Onboarding> {
         permission != PermissionStatus.denied) {
       final Map<Permission, PermissionStatus> permissionStatus =
           await [Permission.location].request();
+
+      if (await Permission.location.request().isGranted) {
+        print('this is granted permission here');
+        _getPermissionDataContacts();
+      } else {
+        print('this is not granted permission here');
+        setState(() {
+          alertWidget = true;
+          alertMessage =
+              'are you sure? Sout needs your location to function properly';
+        });
+      }
       return permissionStatus[Permission.location] ??
           PermissionStatus.undetermined;
     } else {
@@ -34,6 +53,73 @@ class _OnboardingState extends State<Onboarding> {
     final PermissionStatus permissionStatus = await _requestPermission();
     //print(permissionStatus);
     return permissionStatus;
+  }
+
+  Future<PermissionStatus> _requestPermissionContacts() async {
+    final PermissionStatus permission = await Permission.contacts.status;
+    if (permission != PermissionStatus.granted &&
+        permission != PermissionStatus.denied) {
+      final Map<Permission, PermissionStatus> permissionStatus =
+          await [Permission.contacts].request();
+
+      if (await Permission.contacts.request().isGranted) {
+        _getContacts();
+      }
+
+      return permissionStatus[Permission.contacts] ??
+          PermissionStatus.undetermined;
+    } else {
+      return permission;
+    }
+  }
+
+  Future<PermissionStatus> _getPermissionDataContacts() async {
+    final PermissionStatus permissionStatus =
+        await _requestPermissionContacts();
+    //print(permissionStatus);
+    return permissionStatus;
+  }
+
+  Future<void> _getContacts() async {
+    final Iterable<Contact> contacts =
+        (await ContactsService.getContacts()).toList();
+    setState(() {
+      _contacts = contacts;
+    });
+
+    if (_contacts.isNotEmpty) {
+      List<String> addedNumbs = [];
+      List<String> addedNames = [];
+      for (var i = 0; i < _contacts.length; i++) {
+        var numbers = _contacts.elementAt(i).phones.toList();
+        if (numbers.length > 0) {
+          var contact = _contacts.elementAt(i).displayName.toString();
+          //print(contact);
+          addedNames.add(contact);
+          numbers.forEach((number) {
+            addedNumbs.add(number.value.toString() + ' ' + contact);
+          });
+          print(addedNumbs);
+          print(addedNames);
+          setState(() {
+            addedNums = addedNumbs;
+            addedNamesState = addedNames;
+          });
+
+          setContactsToStorage();
+        }
+      }
+    }
+  }
+
+  void setContactsToStorage() async {
+    final SharedPreferences prefs = await _prefs;
+    prefs.setStringList('locallyStoredContacts', addedNums);
+    prefs.setStringList('locallyStoredContactsVal', addedNamesState);
+    var contacts = prefs.getStringList('locallyStoredContactsVal');
+    print('========================================' + 'check it');
+
+    print(contacts);
   }
 
   @override
@@ -155,7 +241,8 @@ class _OnboardingState extends State<Onboarding> {
                           height: 55,
                           child: FlatButton(
                             onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/signup');
+                              Navigator.pushReplacementNamed(
+                                  context, '/signup');
                             },
                             color: Color(0xFF3edd9c),
                             textColor: Colors.white,
