@@ -10,7 +10,6 @@ import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:sout_development/providers/geolocator.dart';
 import 'package:sout_development/providers/contacts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class Dashboard extends StatefulWidget {
   @override
@@ -47,7 +46,7 @@ class _DashboardState extends State<Dashboard> {
     _url = shortLink.shortUrl;
 
     final SharedPreferences prefs = await _prefs;
-    var contacts = prefs.getStringList('locallyStoredContacts');
+    var contacts = prefs.getStringList('localContactsNums');
 
     setState(() {
       contacts == null ? _recepients = [] : _recepients = contacts;

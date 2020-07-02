@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:contacts_service/contacts_service.dart';
-import 'package:provider/provider.dart';
-import 'package:sout_development/providers/contacts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:contacts_service/contacts_service.dart';
 
 final String fontFamily = 'HelveticaNeue';
 
@@ -15,24 +13,66 @@ class _ContactsViewState extends State<ContactsView> {
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   List<String> addedNums = [];
   List<String> addedNumsActive = [];
+  List<String> numbersInStorage = [];
+  List<String> _contacts = [];
+  Iterable<Contact> _getContacts = [];
   String currentText = '';
 
   void _getContactsStorage() async {
     final SharedPreferences prefs = await _prefs;
     var contacts = prefs.getStringList('locallyStoredContactsVal');
     var circleNames = prefs.getStringList('locallyStoredCircleVal');
+    var numbers = prefs.getStringList('locallyStoredContacts');
+    var localContactsNums = prefs.getStringList('localContactsNums');
 
     if (contacts != null) {
       setState(() {
         addedNums = contacts.toSet().toList();
         addedNumsActive = circleNames != null ? circleNames : [];
+        numbersInStorage = numbers != null ? numbers : [];
+        _contacts = localContactsNums != null ? localContactsNums : [];
       });
+    } else {
+      final SharedPreferences prefs = await _prefs;
+      final Iterable<Contact> contacts =
+          (await ContactsService.getContacts()).toList();
+      setState(() {
+        _getContacts = contacts;
+      });
+
+      if (_getContacts.isNotEmpty) {
+        List<String> addedNumbs = [];
+        List<String> addedNames = [];
+        for (var i = 0; i < _contacts.length; i++) {
+          var numbers = _getContacts.elementAt(i).phones.toList();
+          if (numbers.length > 0) {
+            var contact = _getContacts.elementAt(i).displayName.toString();
+
+            addedNames.add(contact);
+            numbers.forEach((number) {
+              addedNumbs.add(number.value.toString() + '*' + contact);
+            });
+            print(addedNumbs);
+            print(addedNames);
+
+            prefs.setStringList('locallyStoredContacts', addedNumbs);
+            prefs.setStringList('locallyStoredContactsVal', addedNames);
+          }
+        }
+
+        _getContactsStorage();
+      } else {
+        prefs.setStringList('locallyStoredContacts', []);
+        prefs.setStringList('locallyStoredContactsVal', []);
+        _getContactsStorage();
+      }
     }
   }
 
   void _setCircleLocal() async {
     final SharedPreferences prefs = await _prefs;
     prefs.setStringList('locallyStoredCircleVal', addedNumsActive);
+    prefs.setStringList('localContactsNums', _contacts);
   }
 
   String truncateWithEllipsis(int cutoff, String myString) {
@@ -141,11 +181,35 @@ class _ContactsViewState extends State<ContactsView> {
                           ? GestureDetector(
                               onTap: () {
                                 var newArr = addedNumsActive;
+                                var newContactsArr = _contacts;
                                 newArr.contains(item)
                                     ? newArr.remove(item)
                                     : newArr.add(item);
                                 setState(() {
                                   addedNumsActive = newArr;
+                                });
+
+                                numbersInStorage.forEach((element) {
+                                  if (element.contains(item)) {
+                                    var itemArr = element.split("*");
+                                    itemArr.forEach((elem) {
+                                      if (newContactsArr.contains(elem)) {
+                                        newContactsArr.remove(elem);
+                                        setState(() {
+                                          _contacts = newContactsArr;
+                                        });
+                                      } else if (elem == item) {
+                                        setState(() {
+                                          _contacts = newContactsArr;
+                                        });
+                                      } else {
+                                        newContactsArr.add(elem);
+                                        setState(() {
+                                          _contacts = newContactsArr;
+                                        });
+                                      }
+                                    });
+                                  }
                                 });
 
                                 _setCircleLocal();

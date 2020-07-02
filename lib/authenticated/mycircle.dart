@@ -19,6 +19,8 @@ class MyCircle extends StatefulWidget {
 class _MyCircleState extends State<MyCircle> {
   bool popUpOpen = false;
   List<String> addedNums = [];
+  List<String> contacts = [];
+  List<String> numbersInStorage = [];
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   String truncateWithEllipsis(int cutoff, String myString) {
@@ -34,12 +36,16 @@ class _MyCircleState extends State<MyCircle> {
   void _getContactsStorage() async {
     final SharedPreferences prefs = await _prefs;
     var contactsFromStorage = prefs.getStringList('locallyStoredCircleVal');
+    var localContactsNums = prefs.getStringList('localContactsNums');
+    var numbers = prefs.getStringList('locallyStoredContacts');
 
     //print(contactsFromStorage.toString() + 'this is the value here');
 
     if (contactsFromStorage != null) {
       setState(() {
-        addedNums = contactsFromStorage;
+        addedNums = contactsFromStorage != null ? contactsFromStorage : [];
+        contacts = localContactsNums != null ? localContactsNums : [];
+        numbersInStorage = numbers != null ? numbers : [];
       });
     }
   }
@@ -47,6 +53,7 @@ class _MyCircleState extends State<MyCircle> {
   void _setCircleLocal() async {
     final SharedPreferences prefs = await _prefs;
     prefs.setStringList('locallyStoredCircleVal', addedNums);
+    prefs.setStringList('localContactsNums', contacts);
   }
 
   @override
@@ -193,10 +200,34 @@ class _MyCircleState extends State<MyCircle> {
                                                                         child: GestureDetector(
                                                                             onTap: () {
                                                                               var placeholderArr = addedNums;
-                                                                              placeholderArr.remove(addedNums[index]);
+                                                                              var newContactsArr = contacts;
+                                                                              var item = addedNums[index];
+                                                                              placeholderArr.remove(item);
 
                                                                               setState(() {
                                                                                 addedNums = placeholderArr;
+                                                                              });
+
+                                                                              numbersInStorage.forEach((element) {
+                                                                                if (element.contains(item)) {
+                                                                                  var itemArr = element.split("*");
+                                                                                  itemArr.forEach((elem) {
+                                                                                    if (newContactsArr.contains(elem)) {
+                                                                                      newContactsArr.remove(elem);
+                                                                                      setState(() {
+                                                                                        contacts = newContactsArr;
+                                                                                      });
+                                                                                    } else if (elem == item) {
+                                                                                      setState(() {
+                                                                                        contacts = newContactsArr;
+                                                                                      });
+                                                                                    } else {
+                                                                                      setState(() {
+                                                                                        contacts = newContactsArr;
+                                                                                      });
+                                                                                    }
+                                                                                  });
+                                                                                }
                                                                               });
 
                                                                               _setCircleLocal();

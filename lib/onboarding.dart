@@ -81,45 +81,47 @@ class _OnboardingState extends State<Onboarding> {
   }
 
   Future<void> _getContacts() async {
-    final Iterable<Contact> contacts =
+    final Iterable<Contact> contactsList =
         (await ContactsService.getContacts()).toList();
-    setState(() {
-      _contacts = contacts;
-    });
+    /*setState(() {
+      _contacts = contactsList;
+    });*/
 
-    if (_contacts.isNotEmpty) {
-      List<String> addedNumbs = [];
-      List<String> addedNames = [];
-      for (var i = 0; i < _contacts.length; i++) {
-        var numbers = _contacts.elementAt(i).phones.toList();
+    final SharedPreferences prefs = await _prefs;
+    List<String> addedNumbs = [];
+    List<String> addedNames = [];
+
+    if (contactsList.isNotEmpty) {
+      for (var i = 0; i < contactsList.length; i++) {
+        var numbers = contactsList.elementAt(i).phones.toList();
         if (numbers.length > 0) {
-          var contact = _contacts.elementAt(i).displayName.toString();
+          var contact = contactsList.elementAt(i).displayName.toString();
           //print(contact);
           addedNames.add(contact);
           numbers.forEach((number) {
-            addedNumbs.add(number.value.toString() + ' ' + contact);
+            addedNumbs.add(number.value.toString() + '*' + contact);
           });
           print(addedNumbs);
           print(addedNames);
-          setState(() {
+          /*setState(() {
             addedNums = addedNumbs;
             addedNamesState = addedNames;
-          });
+          });*/
 
-          setContactsToStorage();
+          prefs.setStringList('locallyStoredContacts', addedNumbs);
+          prefs.setStringList('locallyStoredContactsVal', addedNames);
+          var contacts = prefs.getStringList('locallyStoredContactsVal');
+          var contacts2 = prefs.getStringList('locallyStoredContacts');
+          print('========================================' + 'check it');
+
+          print(contacts);
+          print(contacts2);
         }
       }
+    } else {
+      prefs.setStringList('locallyStoredContacts', addedNumbs);
+      prefs.setStringList('locallyStoredContactsVal', addedNames);
     }
-  }
-
-  void setContactsToStorage() async {
-    final SharedPreferences prefs = await _prefs;
-    prefs.setStringList('locallyStoredContacts', addedNums);
-    prefs.setStringList('locallyStoredContactsVal', addedNamesState);
-    var contacts = prefs.getStringList('locallyStoredContactsVal');
-    print('========================================' + 'check it');
-
-    print(contacts);
   }
 
   @override
